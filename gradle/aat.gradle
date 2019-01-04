@@ -1,0 +1,60 @@
+sourceSets {
+	aat {
+        java.srcDirs = ['src/aat/java']
+        resources.srcDirs = ['src/aat/resources']
+    }
+}
+
+dependencies {
+    aatCompile sourceSets.main.output
+    aatCompile sourceSets.test.output
+
+    aatCompile configurations.compile
+    aatCompile configurations.testCompile
+	  aatCompile libs.test.serenity.core,
+            libs.test.serenity.screenplay,
+            libs.test.serenity.junit,
+            libs.test.serenity.screenplayWebdriver,
+            libs.test.serenity.cucumber,
+            libs.test.junit.junit4,
+            libs.test.assertj
+
+    aatRuntime configurations.runtime
+    aatRuntime configurations.testRuntime
+}
+
+task aat(type: Test) {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Runs the serenity bdd tests.'
+
+    maxHeapSize = '1024m'
+
+    testClassesDir = sourceSets.aat.output.classesDir
+    classpath = sourceSets.aat.runtimeClasspath
+
+    binResultsDir = file("$buildDir/aat-results/binary/aat")
+
+    reports {
+        html.destination = "$buildDir/reports/aat"
+        junitXml.destination = "$buildDir/aat-results"
+    }
+ 	  outputs.upToDateWhen { false }
+		test
+    mustRunAfter tasks.test
+}
+
+check.dependsOn aat
+
+gradle.projectsEvaluated {
+    def quickTasks = []
+
+    gradle.rootProject.allprojects.each { project ->
+        quickTasks.addAll(project.tasks.findAll { it.name == 'test' })
+        quickTasks.addAll(project.tasks.withType(FindBugs))
+        quickTasks.addAll(project.tasks.withType(Pmd))
+    }
+
+    quickTasks.each { task ->
+        project.tasks.aat.mustRunAfter task
+    }
+}

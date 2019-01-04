@@ -1,30 +1,28 @@
 defaultTasks 'clean','test','aggregate'
 
 buildscript {
-	repositories {
-		mavenLocal()
-		jcenter()    
-	}
+	  apply from: "$rootDir/gradle/libraries.gradle"
+		repositories {
+			mavenLocal()
+			mavenCentral()
+			jcenter()
+		}
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.1.RELEASE")
-		classpath("net.serenity-bdd:serenity-gradle-plugin:2.0.23")
+        classpath libs.test.serenity.gradle, libs.spring.boot.gradle
     }
 }
 
-apply from: "$rootDir/gradle/libraries.gradle"
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'net.serenity-bdd.aggregator'
-apply from: "$rootDir/gradle/serenity.gradle"
-
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 repositories {
-	maven { url repoReleases }
 	mavenLocal()
-	jcenter()    
+	mavenCentral()
+	jcenter()
 }
 
 test {
@@ -32,13 +30,7 @@ test {
     systemProperties System.getProperties()
 }
 
-sourceSets {
-	cucumber {
-        java.srcDir = 'src/cucumber/java'
-        resources.srcDir = 'src/cucumber/resources'
-    }
-}
-
+apply from: "$rootDir/gradle/aat.gradle"
 gradle.startParameter.continueOnFailure = true
 
 test.finalizedBy(aggregate)
