@@ -1,17 +1,75 @@
 defaultTasks 'clean','test','aggregate'
 
-repositories {
-    mavenLocal()
-    jcenter()
-}
-
 buildscript {
+	ext {
+		repoSnapshots="http://10.0.92.193:8080/apache-archiva-2.2.3/repository/snapshots"
+		repoReleases="http://10.0.92.193:8080/apache-archiva-2.2.3/repository/internal"
+		repoUser="jenkins"
+		repoPass="jenkins1"
+		springVersion        = '5.1.3.RELEASE'
+		springBootVersion    = '2.1.1.RELEASE'
+		log4JVersion 		 = '2.11.1'
+		serenityVersion      = '1.1.1'
+		powermockVersion     = '1.7.4'
+		junitVersion		 = '5.3.2'
+		mockitoVersion		 = '2.23.4'
+	    slf4jVersion 		 = '1.7.7'
+	    serenityCoreVersion  = '2.0.23'
+	    serenityCucumberVersion = '1.9.22'
+	    assertJVersion		 = '3.11.1'
+	    logbackVersion		 = '1.2.3'
+	
+	    libs = [
+	        slf4jApi: "org.slf4j:slf4j-api:$slf4jVersion",
+	        logback: "ch.qos.logback:logback-classic:${logbackVersion}",
+	
+	        test: [
+	                serenity: [
+	                        core: "net.serenity-bdd:serenity-core:${serenityCoreVersion}",
+	                        junit: "net.serenity-bdd:serenity-junit:${serenityCoreVersion}",
+	                        screenplay: "net.serenity-bdd:serenity-screenplay:${serenityCoreVersion}",
+	                        screenplayWebdriver: "net.serenity-bdd:serenity-screenplay-webdriver:${serenityCoreVersion}",
+	                        cucumber: "net.serenity-bdd:serenity-cucumber:${serenityCucumberVersion}",
+	                        gradle: "net.serenity-bdd:serenity-gradle-plugin:${serenityCoreVersion}",
+	                ],
+	                junit: [
+	                		api: "org.junit.jupiter:junit-jupiter-api:${junitVersion}",
+	                		engine: "org.junit.jupiter:junit-jupiter-engine:${junitVersion}",
+	                		
+	                	   ],
+	                	   //"junit:junit:${junitVersion}",
+	                assertj: "org.assertj:assertj-core:${assertJVersion}",
+	                powermock: [
+	                		core: "org.powermock:powermock-core:${powermockVersion}",
+	                		reflect: "org.powermock:powermock-reflect:${powermockVersion}",
+	                           ],
+	                spring: "org.springframework:spring-test:${springVersion}",
+	                mockito: [
+	                		junit: "org.mockito:mockito-junit-jupiter:${mockitoVersion}",
+	                		inline: "org.mockito:mockito-inline:${mockitoVersion}",
+	                	     ],
+	        	  ],
+	        spring: [
+	        		boot: [
+	        			starter: "org.springframework.boot:spring-boot-starter:${springBootVersion}",
+	        			thymeleaf: "org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}",
+	        			web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
+	        			gradle: "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}",
+	        			]
+	        	    ],
+	        			
+	        ]
+	}
     repositories {
-        mavenLocal()
-        jcenter()
+         maven { url repoReleases }
+	   	 mavenLocal()
+	     jcenter()
+		 
     }
     dependencies {
-        classpath("net.serenity-bdd:serenity-gradle-plugin:2.0.23")
+        classpath(libs.spring.boot.gradle)
+        //classpath("net.serenity-bdd:serenity-gradle-plugin:2.0.23")
+		classpath(libs.test.serenity.gradle)
     }
 }
 
@@ -19,11 +77,17 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'net.serenity-bdd.aggregator'
-apply from: "$rootDir/gradle/libraries.gradle"
+
 
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
+
+repositories {
+	maven { url repoReleases }
+	mavenLocal()
+	jcenter()    
+}
 
 dependencies {
     compile libs.logback
@@ -33,13 +97,41 @@ dependencies {
             libs.test.serenity.junit,
             libs.test.serenity.screenplayWebdriver,
             libs.test.serenity.cucumber,
-            libs.test.junit,
+            libs.test.junit.api,
+            libs.test.junit.engine,
             libs.test.assertj
 }
 
 test {
     testLogging.showStandardStreams = true
     systemProperties System.getProperties()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+        resources {
+            srcDirs = ['src/main/resources']
+        }
+    }
+	test {
+        java {
+            srcDirs = ['src/test/java']
+        }
+        resources {
+            srcDirs = ['src/test/resources']
+        }
+    }
+	cucumber {
+        java {
+            srcDirs = ['src/cucumber/java']
+        }
+        resources {
+            srcDirs = ['src/cucumber/resources']
+        }
+    }
 }
 
 gradle.startParameter.continueOnFailure = true
