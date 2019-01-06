@@ -10,8 +10,6 @@ import org.junit.runner.RunWith;
         features = "src/aat/resources/features"
 )
 
-
-
 public class CucumberTestSuite {
 
 }

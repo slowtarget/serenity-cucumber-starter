@@ -1,8 +1,13 @@
+import static groovy.json.JsonOutput.*
 sourceSets {
 	aat {
         java.srcDirs = ['src/aat/java']
         resources.srcDirs = ['src/aat/resources']
     }
+}
+
+serenity {
+  //logging = "VERBOSE"
 }
 
 dependencies {
@@ -39,10 +44,32 @@ task aat(type: Test) {
         junitXml.destination = "$buildDir/aat-results"
     }
  	  outputs.upToDateWhen { false }
-		test
+
     mustRunAfter tasks.test
+		doLast(){
+			printProperties()
+			testLogging.showStandardStreams = true
+			systemProperties System.getProperties()
+
+			test
+		}
 }
 
+def printProperties(){
+	Properties props = new Properties()
+
+
+props.putAll(project.ext.properties.collectEntries{ [(it.key): it.value.toString()]})
+
+File propsFile = file('src/aat/resources/cucumber.properties')
+
+println "----------- src/test/resources/cucumber.properties list ------------------- "
+println prettyPrint(toJson(props.sort{it.key}))
+println "--------------------------------------------------------------------------- "
+
+props.store(propsFile.newWriter(), null)
+
+}
 check.dependsOn aat
 
 gradle.projectsEvaluated {
